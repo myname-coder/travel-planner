@@ -900,10 +900,10 @@ async function shareToLine() {
 // ═══════════════════════════════════════════════
 //  MODAL / SIDEBAR HELPERS
 // ═══════════════════════════════════════════════
-const openModal  = id => document.getElementById(id).classList.add('open');
-const closeModal = id => document.getElementById(id).classList.remove('open');
-const openSidebar  = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('mob-overlay').classList.add('open'); };
-const closeSidebar = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('mob-overlay').classList.remove('open'); };
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('mob-overlay').classList.add('open'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('mob-overlay').classList.remove('open'); }
 
 // ═══════════════════════════════════════════════
 //  TOAST
@@ -920,8 +920,8 @@ function toast(msg,type='info'){
 // ═══════════════════════════════════════════════
 //  UTILS
 // ═══════════════════════════════════════════════
-const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2);
-const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // Keyboard
 document.addEventListener('keydown',e=>{
