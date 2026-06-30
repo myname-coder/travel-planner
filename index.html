@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>✈️ Travel Planner Pro</title>
+<meta name="description" content="วางแผนเที่ยวหลายทริป พร้อมรูปภาพและแผนที่ — LIFF Ready">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- LINE LIFF SDK -->
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+/* ══════════ RESET & ROOT ══════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:         #070b16;
+  --sidebar:    rgba(8,12,26,0.97);
+  --card:       rgba(255,255,255,0.045);
+  --card-hover: rgba(255,255,255,0.08);
+  --border:     rgba(255,255,255,0.07);
+  --border-hi:  rgba(255,255,255,0.13);
+  --text:       #e2e8f4;
+  --muted:      rgba(226,232,244,0.45);
+  --modal-bg:   rgba(8,12,26,0.98);
+  --accent:     #3b82f6;
+  --hotel-c:    #60a5fa;  --hotel-bg:  rgba(96,165,250,0.12);  --hotel-bd:  rgba(96,165,250,0.35);
+  --rest-c:     #fb923c;  --rest-bg:   rgba(251,146,60,0.12);   --rest-bd:   rgba(251,146,60,0.35);
+  --cafe-c:     #a78bfa;  --cafe-bg:   rgba(167,139,250,0.12);  --cafe-bd:   rgba(167,139,250,0.35);
+  --attr-c:     #4ade80;  --attr-bg:   rgba(74,222,128,0.12);   --attr-bd:   rgba(74,222,128,0.35);
+  --shop-c:     #f472b6;  --shop-bg:   rgba(244,114,182,0.12);  --shop-bd:   rgba(244,114,182,0.35);
+}
+
+html, body { height: 100%; font-family: 'Kanit', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+
+/* ══════════ LAYOUT ══════════ */
+.app { display: flex; height: 100vh; }
+
+/* ══════════ SIDEBAR ══════════ */
+.sidebar {
+  width: 260px; min-width: 260px; height: 100vh;
+  background: var(--sidebar); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow: hidden; z-index: 10;
+  transition: left 0.3s;
+}
+.sidebar-top { padding: 18px 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+
+.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.brand-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg,#3b82f6,#7c3aed);
+  border-radius: 11px; display: flex; align-items: center; justify-content: center;
+  font-size: 19px; box-shadow: 0 4px 14px rgba(59,130,246,0.3); flex-shrink: 0;
+}
+.brand h1 { font-size: 1rem; font-weight: 700; background: linear-gradient(135deg,#e2e8f4,#94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.2; }
+.brand p  { font-size: 0.62rem; color: var(--muted); }
+
+.btn-new-trip {
+  width: 100%; padding: 9px; background: linear-gradient(135deg,#3b82f6,#2563eb);
+  border: none; border-radius: 10px; color: #fff; font-family: 'Kanit', sans-serif;
+  font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-new-trip:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(59,130,246,0.35); }
+
+.trip-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 3px; }
+.trip-list::-webkit-scrollbar { width: 3px; }
+.trip-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+.trip-item { padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: all 0.18s; border: 1px solid transparent; display: flex; align-items: center; gap: 9px; position: relative; }
+.trip-item:hover  { background: var(--card-hover); }
+.trip-item.active { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.3); }
+.trip-emoji { font-size: 1.25rem; flex-shrink: 0; }
+.trip-info  { flex: 1; min-width: 0; }
+.trip-name  { font-size: 0.84rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trip-dates { font-size: 0.67rem; color: var(--muted); margin-top: 1px; }
+.trip-count { font-size: 0.63rem; background: rgba(255,255,255,0.09); border-radius: 8px; padding: 1px 6px; color: var(--muted); flex-shrink: 0; }
+.trip-del   { display: none; background: none; border: none; color: rgba(255,255,255,0.2); cursor: pointer; font-size: 0.82rem; padding: 2px; transition: color 0.15s; }
+.trip-item:hover .trip-del { display: block; }
+.trip-del:hover { color: #f87171; }
+
+/* ══════════ MAIN ══════════ */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Trip Header */
+.trip-header    { padding: 16px 22px 0; flex-shrink: 0; border-bottom: 1px solid var(--border); }
+.trip-header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.trip-big-emoji  { font-size: 1.9rem; }
+.trip-header-info { flex: 1; }
+.trip-header-info h2 { font-size: 1.25rem; font-weight: 700; }
+.trip-header-info p  { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+.trip-header-actions { display: flex; gap: 7px; flex-shrink: 0; }
+
+.btn-icon { background: var(--card); border: 1px solid var(--border); border-radius: 9px; padding: 7px 12px; color: var(--muted); font-family: 'Kanit', sans-serif; font-size: 0.73rem; cursor: pointer; transition: all 0.18s; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.btn-icon:hover { background: var(--card-hover); color: var(--text); border-color: var(--border-hi); }
+
+/* Category Tabs */
+.cat-tabs { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 0; }
+.cat-tabs::-webkit-scrollbar { display: none; }
+.cat-tab { padding: 7px 13px; border-radius: 9px 9px 0 0; border: 1px solid transparent; border-bottom: none; background: none; color: var(--muted); font-family: 'Kanit', sans-serif; font-size: 0.73rem; cursor: pointer; transition: all 0.18s; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
+.cat-tab:hover  { background: var(--card); color: var(--text); }
+.cat-tab.active { background: var(--card-hover); border-color: var(--border-hi); color: var(--text); }
+.ct-badge { font-size: 0.58rem; background: rgba(255,255,255,0.1); border-radius: 8px; padding: 1px 5px; }
+
+/* Places Grid */
+.places-area { flex: 1; overflow-y: auto; padding: 20px 22px; }
+.places-area::-webkit-scrollbar { width: 4px; }
+.places-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+.places-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px,1fr)); gap: 15px; }
+
+/* Place Card */
+.place-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; cursor: pointer; transition: all 0.22s; animation: fadeUp 0.3s ease both; display: flex; flex-direction: column; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+.place-card:hover { border-color: var(--border-hi); transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.35); }
+
+.card-photo { width: 100%; height: 155px; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+.card-photo img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+.place-card:hover .card-photo img { transform: scale(1.05); }
+
+.cat-badge { position: absolute; top: 10px; left: 10px; border-radius: 8px; padding: 3px 9px; font-size: 0.64rem; font-weight: 600; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); }
+.card-del-btn { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.65); backdrop-filter: blur(6px); border: none; border-radius: 7px; padding: 4px 8px; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.73rem; transition: all 0.15s; opacity: 0; }
+.place-card:hover .card-del-btn { opacity: 1; }
+.card-del-btn:hover { background: rgba(239,68,68,0.75); color: #fff; }
+
+.card-body  { padding: 12px 13px; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.card-name  { font-size: 0.88rem; font-weight: 600; line-height: 1.35; }
+.card-meta  { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.card-tag   { font-size: 0.67rem; color: var(--muted); background: rgba(255,255,255,0.06); border-radius: 6px; padding: 1px 7px; }
+.card-notes { font-size: 0.72rem; color: var(--muted); margin-top: 5px; padding-top: 5px; border-top: 1px solid var(--border); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card-maps-btn { margin-top: 8px; display: inline-flex; align-items: center; gap: 5px; font-size: 0.71rem; color: var(--accent); text-decoration: none; font-weight: 500; background: rgba(59,130,246,0.1); border-radius: 7px; padding: 5px 10px; transition: background 0.15s; border: 1px solid rgba(59,130,246,0.2); }
+.card-maps-btn:hover { background: rgba(59,130,246,0.2); }
+
+/* Add Card */
+.add-place-card { background: none; border: 2px dashed var(--border); border-radius: 16px; min-height: 230px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; cursor: pointer; transition: all 0.2s; color: var(--muted); }
+.add-place-card:hover { border-color: rgba(59,130,246,0.5); color: var(--accent); background: rgba(59,130,246,0.04); }
+.add-place-card .add-icon { font-size: 2rem; }
+.add-place-card p { font-size: 0.82rem; font-weight: 500; }
+
+/* ══════════ EMPTY STATE ══════════ */
+.empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: var(--muted); padding: 40px; text-align: center; }
+.empty-state .es-icon { font-size: 4rem; }
+.empty-state h2 { font-size: 1.2rem; font-weight: 600; color: var(--text); }
+.empty-state p  { font-size: 0.85rem; max-width: 300px; line-height: 1.6; }
+.es-btn { padding: 11px 24px; background: linear-gradient(135deg,#3b82f6,#2563eb); border: none; border-radius: 11px; color: #fff; font-family: 'Kanit', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 4px; }
+.es-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(59,130,246,0.35); }
+
+/* ══════════ MODAL ══════════ */
+.modal-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.72); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-box { background: var(--modal-bg); border: 1px solid var(--border-hi); border-radius: 20px; padding: 24px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; transform: translateY(22px); transition: transform 0.25s; }
+.modal-overlay.open .modal-box { transform: translateY(0); }
+.modal-box::-webkit-scrollbar { width: 3px; }
+.modal-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+.modal-title { font-size: 1.12rem; font-weight: 700; margin-bottom: 18px; }
+
+.fg { margin-bottom: 13px; }
+.fg label { display: block; font-size: 0.71rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.fg input, .fg textarea {
+  width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 12px; color: var(--text);
+  font-family: 'Kanit', sans-serif; font-size: 0.85rem; outline: none; transition: all 0.2s;
+}
+.fg input:focus, .fg textarea:focus { border-color: rgba(96,165,250,0.45); background: rgba(96,165,250,0.05); box-shadow: 0 0 0 3px rgba(96,165,250,0.1); }
+.fg input::placeholder, .fg textarea::placeholder { color: var(--muted); }
+.fg textarea { resize: none; height: 72px; }
+.fg-row { display: flex; gap: 10px; }
+.fg-row .fg { flex: 1; margin-bottom: 0; }
+
+/* Category Selector */
+.cat-selector { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; }
+.cat-opt { padding: 8px 4px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--muted); font-family: 'Kanit', sans-serif; font-size: 0.64rem; cursor: pointer; text-align: center; transition: all 0.18s; }
+.cat-opt .co-icon { font-size: 1.3rem; display: block; margin-bottom: 2px; }
+.cat-opt:hover { background: var(--card-hover); }
+.cat-opt.sel.hotel      { background: var(--hotel-bg); border-color: var(--hotel-bd); color: var(--hotel-c); font-weight: 600; }
+.cat-opt.sel.restaurant { background: var(--rest-bg);  border-color: var(--rest-bd);  color: var(--rest-c);  font-weight: 600; }
+.cat-opt.sel.cafe       { background: var(--cafe-bg);  border-color: var(--cafe-bd);  color: var(--cafe-c);  font-weight: 600; }
+.cat-opt.sel.attraction { background: var(--attr-bg);  border-color: var(--attr-bd);  color: var(--attr-c);  font-weight: 600; }
+.cat-opt.sel.shopping   { background: var(--shop-bg);  border-color: var(--shop-bd);  color: var(--shop-c);  font-weight: 600; }
+
+/* Emoji Grid */
+.emoji-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.emoji-opt { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); font-size: 1.35rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.emoji-opt:hover  { border-color: var(--border-hi); background: var(--card-hover); }
+.emoji-opt.sel    { border-color: rgba(59,130,246,0.6); background: rgba(59,130,246,0.12); }
+
+/* Photo Section */
+.photo-preview { width: 100%; height: 135px; border-radius: 12px; overflow: hidden; background: linear-gradient(135deg,#1e293b,#0f172a); display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 8px; }
+.photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+.btn-fetch { width: 100%; padding: 8px; border-radius: 9px; border: 1px dashed var(--border); background: none; color: var(--muted); font-family: 'Kanit', sans-serif; font-size: 0.77rem; cursor: pointer; transition: all 0.18s; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 7px; }
+.btn-fetch:hover { border-color: rgba(96,165,250,0.4); color: var(--hotel-c); background: rgba(96,165,250,0.05); }
+.btn-fetch.loading { opacity: 0.6; pointer-events: none; }
+
+.modal-actions { display: flex; gap: 8px; margin-top: 18px; }
+.btn-primary { flex: 1; padding: 11px; border-radius: 11px; border: none; background: linear-gradient(135deg,#3b82f6,#2563eb); color: #fff; font-family: 'Kanit', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-primary:hover { filter: brightness(1.1); }
+.btn-cancel  { padding: 11px 18px; border-radius: 11px; border: 1px solid var(--border); background: none; color: var(--muted); font-family: 'Kanit', sans-serif; font-size: 0.9rem; cursor: pointer; transition: all 0.18s; }
+.btn-cancel:hover { background: var(--card-hover); color: var(--text); }
+
+/* LINE Button */
+.btn-line { background: #06C755; border: none; border-radius: 9px; padding: 7px 14px; color: #fff; font-family: 'Kanit', sans-serif; font-size: 0.73rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: filter 0.18s; }
+.btn-line:hover { filter: brightness(1.1); }
+.btn-line.hide { display: none; }
+
+/* ══════════ TOAST ══════════ */
+.toast { position: fixed; top: 18px; left: 50%; transform: translateX(-50%) translateY(-80px); background: rgba(8,12,26,0.94); backdrop-filter: blur(14px); border: 1px solid var(--border-hi); border-radius: 12px; padding: 11px 20px; color: var(--text); font-size: 0.82rem; font-weight: 500; z-index: 9999; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1); display: flex; align-items: center; gap: 8px; white-space: nowrap; box-shadow: 0 10px 36px rgba(0,0,0,0.45); }
+.toast.show    { transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: rgba(74,222,128,0.4); }
+.toast.error   { border-color: rgba(248,113,113,0.4); }
+.toast.info    { border-color: rgba(96,165,250,0.4); }
+
+/* ══════════ RESPONSIVE (Mobile / LINE) ══════════ */
+@media (max-width: 680px) {
+  .sidebar { position: fixed; left: -270px; z-index: 200; height: 100vh; }
+  .sidebar.open { left: 0; box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
+  .main { width: 100%; }
+  .mobile-menu { display: flex !important; }
+  .places-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .trip-header { padding: 12px 14px 0; }
+  .places-area { padding: 12px 14px; }
+}
+.mobile-menu { display: none; background: var(--card); border: 1px solid var(--border); border-radius: 9px; padding: 7px 10px; color: var(--text); cursor: pointer; font-size: 1.1rem; }
+.mob-overlay { display: none; position: fixed; inset: 0; z-index: 199; background: rgba(0,0,0,0.55); }
+.mob-overlay.open { display: block; }
+</style>
+</head>
+<body>
+
+<div class="mob-overlay" id="mob-overlay" onclick="closeSidebar()"></div>
+
+<div class="app">
+  <!-- ══ SIDEBAR ══ -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="brand">
+        <div class="brand-icon">✈️</div>
+        <div><h1>Travel Planner</h1><p>Pro Edition</p></div>
+      </div>
+      <button class="btn-new-trip" onclick="openTripModal()">+ สร้างทริปใหม่</button>
+    </div>
+    <div class="trip-list" id="trip-list"></div>
+  </nav>
+
+  <!-- ══ MAIN ══ -->
+  <main class="main" id="main"></main>
+</div>
+
+<!-- Modal: New Trip -->
+<div class="modal-overlay" id="modal-trip" onclick="if(event.target.id==='modal-trip')closeModal('modal-trip')">
+  <div class="modal-box">
+    <div class="modal-title">🧳 สร้างทริปใหม่</div>
+    <div class="fg"><label>ชื่อทริป *</label><input id="t-name" placeholder="เช่น เชียงใหม่ ก.ค. 2026" /></div>
+    <div class="fg"><label>วันเดินทาง</label><input id="t-dates" placeholder="เช่น 10-15 กรกฎาคม 2026" /></div>
+    <div class="fg">
+      <label>เลือก Emoji ทริป</label>
+      <div class="emoji-grid" id="emoji-grid"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-trip')">ยกเลิก</button>
+      <button class="btn-primary" onclick="saveTrip()">✅ สร้างทริป</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add/Edit Place -->
+<div class="modal-overlay" id="modal-place" onclick="if(event.target.id==='modal-place')closeModal('modal-place')">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-place-title">📍 เพิ่มสถานที่</div>
+
+    <div class="fg">
+      <label>หมวดหมู่</label>
+      <div class="cat-selector" id="cat-selector"></div>
+    </div>
+
+    <div class="fg"><label>ชื่อสถานที่ *</label><input id="p-name" placeholder="เช่น วัดพระแก้ว, Nimman Hive Hotel, ร้านข้าวซอยลามดวน" /></div>
+
+    <div class="fg-row">
+      <div class="fg"><label>จังหวัด</label><input id="p-province" placeholder="เช่น เชียงใหม่" /></div>
+      <div class="fg"><label>วันที่</label><input id="p-date" placeholder="เช่น 10 ก.ค." /></div>
+    </div>
+
+    <div class="fg"><label>โน้ต</label><textarea id="p-notes" placeholder="ค่าเข้า, เวลาเปิด-ปิด, เมนูแนะนำ, ข้อมูลเพิ่มเติม..."></textarea></div>
+
+    <div class="fg">
+      <label>รูปภาพ</label>
+      <div class="photo-preview" id="photo-preview"><span id="photo-icon">🏞️</span></div>
+      <button class="btn-fetch" id="btn-fetch" onclick="doFetchPhoto()">
+        <span id="fetch-icon">🔍</span><span id="fetch-txt">ดึงรูปอัตโนมัติจาก Wikipedia</span>
+      </button>
+      <input id="p-img" placeholder="หรือวาง URL รูปภาพ / Google Drive link เองได้" oninput="onImgInput()" />
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-place')">ยกเลิก</button>
+      <button class="btn-primary" onclick="savePlace()">📍 บันทึกสถานที่</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toast-msg"></span></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════
+const SK      = 'tp_pro_v2';
+const LIFF_ID = 'YOUR_LIFF_ID'; // 🔧 แทนด้วย LIFF ID จาก LINE Developer Console
+
+const CATS = {
+  hotel:      {l:'ที่พัก',    i:'🏨',c:'#60a5fa',bg:'rgba(96,165,250,0.12)',  bd:'rgba(96,165,250,0.35)'},
+  restaurant: {l:'ร้านอาหาร',i:'🍽️',c:'#fb923c',bg:'rgba(251,146,60,0.12)',   bd:'rgba(251,146,60,0.35)'},
+  cafe:       {l:'คาเฟ่',    i:'☕', c:'#a78bfa',bg:'rgba(167,139,250,0.12)', bd:'rgba(167,139,250,0.35)'},
+  attraction: {l:'ที่เที่ยว',i:'🏞️',c:'#4ade80',bg:'rgba(74,222,128,0.12)',   bd:'rgba(74,222,128,0.35)'},
+  shopping:   {l:'ช้อปปิ้ง', i:'🛍️',c:'#f472b6',bg:'rgba(244,114,182,0.12)', bd:'rgba(244,114,182,0.35)'}
+};
+
+const EMOJIS = ['🏔️','🌊','🗼','🌸','🏝️','🎎','🌅','🏜️','🌃','🎡','🗺️','✈️','🌴','⛩️','🏖️','🚂','🎆','🌿'];
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let DB  = {trips:[]};
+let act = {tripId:null, cat:'all'};
+let ui  = {emoji:'🗺️', cat:'attraction', photo:'', editId:null};
+let isLiff = false;
+
+// ═══════════════════════════════════════════════
+//  STORAGE
+// ═══════════════════════════════════════════════
+const load = () => { try { const r=localStorage.getItem(SK); if(r) DB=JSON.parse(r); } catch(e){} };
+const save = () => localStorage.setItem(SK, JSON.stringify(DB));
+
+// ═══════════════════════════════════════════════
+//  LIFF
+// ═══════════════════════════════════════════════
+async function initLiff() {
+  try { await liff.init({liffId:LIFF_ID}); isLiff=liff.isInClient(); } catch(e){}
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════
+function render() { renderSidebar(); renderMain(); }
+
+function renderSidebar() {
+  const el = document.getElementById('trip-list');
+  if (!DB.trips.length) {
+    el.innerHTML = `<p style="padding:20px 8px;text-align:center;color:var(--muted);font-size:0.78rem;line-height:1.7">ยังไม่มีทริปครับ<br>กด "+ สร้างทริปใหม่" ด้านบน</p>`;
+    return;
+  }
+  el.innerHTML = DB.trips.map(t => `
+    <div class="trip-item ${t.id===act.tripId?'active':''}" onclick="selTrip('${t.id}')">
+      <span class="trip-emoji">${t.emoji}</span>
+      <div class="trip-info">
+        <div class="trip-name">${esc(t.name)}</div>
+        ${t.dates?`<div class="trip-dates">${esc(t.dates)}</div>`:''}
+      </div>
+      <span class="trip-count">${t.places.length}</span>
+      <button class="trip-del" onclick="event.stopPropagation();delTrip('${t.id}')" title="ลบ">✕</button>
+    </div>`).join('');
+}
+
+function renderMain() {
+  const el = document.getElementById('main');
+  if (!act.tripId) {
+    el.innerHTML = `<div class="empty-state">
+      <div class="es-icon">✈️</div>
+      <h2>ยินดีต้อนรับสู่ Travel Planner Pro</h2>
+      <p>เริ่มต้นด้วยการสร้างทริปแรกของคุณ จัดการสถานที่แบบแบ่งหมวดหมู่ พร้อมรูปภาพและแผนที่</p>
+      <button class="es-btn" onclick="openTripModal()">+ สร้างทริปแรก</button>
+    </div>`;
+    return;
+  }
+
+  const trip = DB.trips.find(t=>t.id===act.tripId);
+  if (!trip) return;
+
+  const counts = {all:trip.places.length};
+  Object.keys(CATS).forEach(k=>counts[k]=trip.places.filter(p=>p.cat===k).length);
+  const places = act.cat==='all' ? trip.places : trip.places.filter(p=>p.cat===act.cat);
+
+  el.innerHTML = `
+    <div class="trip-header">
+      <div class="trip-header-top">
+        <button class="mobile-menu" onclick="openSidebar()">☰</button>
+        <span class="trip-big-emoji">${trip.emoji}</span>
+        <div class="trip-header-info">
+          <h2>${esc(trip.name)}</h2>
+          ${trip.dates?`<p>📅 ${esc(trip.dates)}</p>`:''}
+        </div>
+        <div class="trip-header-actions">
+          <button class="btn-line ${isLiff?'':'hide'}" onclick="shareToLine()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+            แชร์ LINE
+          </button>
+          <button class="btn-icon" onclick="exportCSV('${trip.id}')">📥 Export CSV</button>
+        </div>
+      </div>
+      <div class="cat-tabs">
+        <button class="cat-tab ${act.cat==='all'?'active':''}" onclick="setCat('all')">🗂️ ทั้งหมด <span class="ct-badge">${counts.all}</span></button>
+        ${Object.entries(CATS).map(([k,v])=>`<button class="cat-tab ${act.cat===k?'active':''}" onclick="setCat('${k}')">${v.i} ${v.l} <span class="ct-badge">${counts[k]}</span></button>`).join('')}
+      </div>
+    </div>
+    <div class="places-area">
+      <div class="places-grid">
+        ${places.map((p,i)=>cardHTML(p,i)).join('')}
+        <div class="add-place-card" onclick="openPlaceModal()">
+          <div class="add-icon">➕</div><p>เพิ่มสถานที่</p>
+        </div>
+      </div>
+    </div>`;
+}
+
+function cardHTML(p, i) {
+  const c = CATS[p.cat]||CATS.attraction;
+  const photo = p.img
+    ? `<img src="${esc(p.img)}" alt="${esc(p.name)}" onerror="this.parentElement.innerHTML='<span style=font-size:3rem>${c.i}</span>'"/>`
+    : `<span style="font-size:3.5rem">${c.i}</span>`;
+  const photoBg = p.img ? '' : `background:linear-gradient(135deg,${c.c}22,${c.c}08)`;
+  const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name+(p.province?' '+p.province:''))}`;
+
+  return `<div class="place-card" style="animation-delay:${i*0.04}s">
+    <div class="card-photo" style="${photoBg}">
+      ${photo}
+      <span class="cat-badge" style="background:${c.bg};color:${c.c};border-color:${c.bd}">${c.i} ${c.l}</span>
+      <button class="card-del-btn" onclick="event.stopPropagation();delPlace('${p.id}')" title="ลบ">✕</button>
+    </div>
+    <div class="card-body">
+      <div class="card-name">${esc(p.name)}</div>
+      <div class="card-meta">
+        ${p.province?`<span class="card-tag">📍 ${esc(p.province)}</span>`:''}
+        ${p.date?`<span class="card-tag">📅 ${esc(p.date)}</span>`:''}
+      </div>
+      ${p.notes?`<div class="card-notes">${esc(p.notes)}</div>`:''}
+      <a class="card-maps-btn" href="${mapsHref}" target="_blank" onclick="event.stopPropagation()">🗺️ Google Maps</a>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════
+//  TRIP CRUD
+// ═══════════════════════════════════════════════
+function openTripModal() {
+  ui.emoji = '🗺️';
+  document.getElementById('t-name').value  = '';
+  document.getElementById('t-dates').value = '';
+  document.getElementById('emoji-grid').innerHTML = EMOJIS.map(e=>
+    `<div class="emoji-opt ${e===ui.emoji?'sel':''}" onclick="pickEmoji('${e}',this)">${e}</div>`
+  ).join('');
+  openModal('modal-trip');
+  setTimeout(()=>document.getElementById('t-name').focus(),280);
+}
+
+function pickEmoji(e, el) {
+  ui.emoji = e;
+  document.querySelectorAll('.emoji-opt').forEach(x=>x.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function saveTrip() {
+  const name  = document.getElementById('t-name').value.trim();
+  const dates = document.getElementById('t-dates').value.trim();
+  if (!name) { toast('⚠️ กรุณากรอกชื่อทริปก่อนครับ','error'); return; }
+  const t = {id:uid(), name, dates, emoji:ui.emoji, places:[]};
+  DB.trips.push(t);
+  act.tripId = t.id; act.cat = 'all';
+  save(); closeModal('modal-trip'); render();
+  toast(`✅ สร้างทริป "${name}" แล้ว!`,'success');
+}
+
+function selTrip(id) { act.tripId=id; act.cat='all'; render(); closeSidebar(); }
+
+function delTrip(id) {
+  const t = DB.trips.find(x=>x.id===id);
+  if (!t || !confirm(`ลบทริป "${t.name}" ออกทั้งหมดไหมครับ?`)) return;
+  DB.trips = DB.trips.filter(x=>x.id!==id);
+  if (act.tripId===id) act.tripId = DB.trips[0]?.id||null;
+  save(); render(); toast('🗑️ ลบทริปเรียบร้อยแล้ว','info');
+}
+
+// ═══════════════════════════════════════════════
+//  PLACE CRUD
+// ═══════════════════════════════════════════════
+function openPlaceModal(editId=null) {
+  ui.editId = editId; ui.photo = '';
+  if (editId) {
+    const trip = DB.trips.find(t=>t.id===act.tripId);
+    const p    = trip?.places.find(x=>x.id===editId);
+    if (p) {
+      ui.cat = p.cat; ui.photo = p.img||'';
+      document.getElementById('modal-place-title').textContent = '✏️ แก้ไขสถานที่';
+      document.getElementById('p-name').value     = p.name;
+      document.getElementById('p-province').value = p.province||'';
+      document.getElementById('p-date').value     = p.date||'';
+      document.getElementById('p-notes').value    = p.notes||'';
+      document.getElementById('p-img').value      = p.img||'';
+    }
+  } else {
+    ui.cat = 'attraction';
+    document.getElementById('modal-place-title').textContent = '📍 เพิ่มสถานที่';
+    ['p-name','p-province','p-date','p-notes','p-img'].forEach(id=>document.getElementById(id).value='');
+  }
+  buildCatSelector();
+  setPhotoPreview(ui.photo, ui.cat);
+  openModal('modal-place');
+  setTimeout(()=>document.getElementById('p-name').focus(),280);
+}
+
+function buildCatSelector() {
+  document.getElementById('cat-selector').innerHTML = Object.entries(CATS).map(([k,v])=>
+    `<div class="cat-opt ${k===ui.cat?'sel '+k:''}" onclick="pickCat('${k}',this)">
+      <span class="co-icon">${v.i}</span>${v.l}
+    </div>`
+  ).join('');
+}
+
+function pickCat(k, el) {
+  ui.cat = k;
+  document.querySelectorAll('.cat-opt').forEach(x=>x.className='cat-opt');
+  el.classList.add('sel', k);
+  if (!ui.photo) setPhotoPreview('', k);
+}
+
+function setPhotoPreview(url, cat) {
+  const c   = CATS[cat]||CATS.attraction;
+  const pre = document.getElementById('photo-preview');
+  if (url) {
+    pre.innerHTML = `<img src="${esc(url)}" style="width:100%;height:100%;object-fit:cover" onerror="setPhotoPreview('','${cat}')" alt="preview">`;
+  } else {
+    pre.innerHTML = `<span style="font-size:3.2rem">${c.i}</span>`;
+    pre.style.background = `linear-gradient(135deg,${c.c}22,${c.c}08)`;
+  }
+}
+
+function onImgInput() {
+  const v = document.getElementById('p-img').value.trim();
+  ui.photo = v ? fixImgUrl(v) : '';
+  setPhotoPreview(ui.photo, ui.cat);
+}
+
+async function savePlace() {
+  const name     = document.getElementById('p-name').value.trim();
+  const province = document.getElementById('p-province').value.trim();
+  const date     = document.getElementById('p-date').value.trim();
+  const notes    = document.getElementById('p-notes').value.trim();
+  const imgRaw   = document.getElementById('p-img').value.trim();
+  if (!name) { toast('⚠️ กรุณากรอกชื่อสถานที่ก่อนครับ','error'); return; }
+
+  const img  = imgRaw ? fixImgUrl(imgRaw) : ui.photo;
+  const trip = DB.trips.find(t=>t.id===act.tripId);
+  if (!trip) return;
+
+  if (ui.editId) {
+    const p = trip.places.find(x=>x.id===ui.editId);
+    if (p) Object.assign(p,{cat:ui.cat,name,province,date,notes,img});
+  } else {
+    const p = {id:uid(),cat:ui.cat,name,province,date,notes,img,lat:null,lng:null};
+    trip.places.push(p);
+    geocodeBg(p.id, name, province, trip.id);
+  }
+
+  save(); closeModal('modal-place'); render();
+  toast(`✅ ${ui.editId?'แก้ไข':'เพิ่ม'} "${name}" เรียบร้อยแล้ว`,'success');
+  ui.editId = null;
+}
+
+function delPlace(pid) {
+  const trip = DB.trips.find(t=>t.id===act.tripId);
+  if (!trip) return;
+  const p = trip.places.find(x=>x.id===pid);
+  if (!p || !confirm(`ลบ "${p.name}" ออกไหมครับ?`)) return;
+  trip.places = trip.places.filter(x=>x.id!==pid);
+  save(); render(); toast('🗑️ ลบสถานที่แล้ว','info');
+}
+
+function setCat(c) { act.cat=c; renderMain(); }
+
+// ═══════════════════════════════════════════════
+//  PHOTO — Wikipedia API (ฟรี ไม่ต้อง Key)
+// ═══════════════════════════════════════════════
+async function doFetchPhoto() {
+  const name     = document.getElementById('p-name').value.trim();
+  const province = document.getElementById('p-province').value.trim();
+  if (!name) { toast('⚠️ กรอกชื่อสถานที่ก่อนครับ','error'); return; }
+
+  const btn = document.getElementById('btn-fetch');
+  const fic = document.getElementById('fetch-icon');
+  const ftx = document.getElementById('fetch-txt');
+  btn.classList.add('loading');
+  fic.textContent='⏳'; ftx.textContent='กำลังค้นหารูปภาพ...';
+  toast('🔍 กำลังค้นหารูปจาก Wikipedia...','info');
+
+  const url = await wikiPhoto(name, province);
+
+  if (url) {
+    ui.photo = url;
+    document.getElementById('p-img').value = url;
+    setPhotoPreview(url, ui.cat);
+    toast('✅ พบรูปภาพเรียบร้อยแล้ว','success');
+  } else {
+    toast('📷 ไม่พบรูปใน Wikipedia — ลองวาง URL รูปเองด้านล่างครับ','error');
+  }
+
+  btn.classList.remove('loading');
+  fic.textContent='🔍'; ftx.textContent='ดึงรูปอัตโนมัติจาก Wikipedia';
+}
+
+async function wikiPhoto(name, province) {
+  const queries = [
+    province?`${name} ${province}`:name,
+    name,
+    `${name} Thailand`
+  ];
+  for (const q of queries) {
+    for (const lang of ['th','en']) {
+      try {
+        const url  = `https://${lang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(q)}&prop=pageimages&format=json&pithumbsize=600&origin=*`;
+        const res  = await fetch(url);
+        const data = await res.json();
+        const page = Object.values(data.query.pages)[0];
+        if (page?.thumbnail?.source) return page.thumbnail.source;
+      } catch(e){}
+    }
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════
+//  GEOCODE (Nominatim — Background)
+// ═══════════════════════════════════════════════
+async function geocodeBg(pid, name, province, tripId) {
+  try {
+    const q   = province?`${name} ${province} ประเทศไทย`:name;
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`,{headers:{'User-Agent':'TravelPlannerPro/1.0'}});
+    const arr = await res.json();
+    if (arr.length) {
+      const trip = DB.trips.find(t=>t.id===tripId);
+      const p    = trip?.places.find(x=>x.id===pid);
+      if (p) { p.lat=parseFloat(arr[0].lat); p.lng=parseFloat(arr[0].lon); save(); }
+    }
+  } catch(e){}
+}
+
+// ═══════════════════════════════════════════════
+//  IMAGE URL FIX (Google Drive → Direct)
+// ═══════════════════════════════════════════════
+function fixImgUrl(url) {
+  const m = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  return m ? `https://drive.google.com/uc?export=view&id=${m[1]}` : url;
+}
+
+// ═══════════════════════════════════════════════
+//  CSV EXPORT
+// ═══════════════════════════════════════════════
+function exportCSV(tid) {
+  const trip = DB.trips.find(t=>t.id===tid);
+  if (!trip?.places.length) { toast('⚠️ ยังไม่มีสถานที่ในทริปนี้ครับ','error'); return; }
+  const hdr  = ['หมวดหมู่','ชื่อสถานที่','จังหวัด','วันที่','โน้ต','Latitude','Longitude','Google Maps Link'];
+  const rows = trip.places.map(p=>[
+    CATS[p.cat]?.l||p.cat, p.name, p.province||'', p.date||'', p.notes||'',
+    p.lat||'', p.lng||'',
+    p.lat?`https://www.google.com/maps?q=${p.lat},${p.lng}`:''
+  ]);
+  const csv  = [hdr,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const a    = Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:`${trip.name}_${new Date().toISOString().slice(0,10)}.csv`});
+  a.click(); URL.revokeObjectURL(a.href);
+  toast(`✅ Export CSV ${trip.places.length} สถานที่เรียบร้อย`,'success');
+}
+
+// ═══════════════════════════════════════════════
+//  LINE SHARE
+// ═══════════════════════════════════════════════
+async function shareToLine() {
+  if (!isLiff||!liff.isInClient()) { toast('กรุณาเปิดในแอป LINE ครับ','error'); return; }
+  const trip = DB.trips.find(t=>t.id===act.tripId);
+  if (!trip) return;
+  try {
+    await liff.shareTargetPicker([{
+      type:'flex', altText:`✈️ แผนทริป: ${trip.name}`,
+      contents:{
+        type:'bubble',
+        body:{ type:'box', layout:'vertical', spacing:'md', contents:[
+          {type:'text',text:`${trip.emoji} ${trip.name}`,weight:'bold',size:'xl',color:'#1e293b'},
+          {type:'text',text:trip.dates||'ดูแผนเที่ยวด้านล่าง',size:'sm',color:'#64748b'},
+          {type:'separator',margin:'md'},
+          {type:'text',text:`📍 ${trip.places.length} สถานที่`,size:'sm',color:'#475569',margin:'md'}
+        ]},
+        footer:{ type:'box', layout:'vertical', contents:[{
+          type:'button', style:'primary', color:'#3b82f6',
+          action:{type:'uri',label:'เปิดแผนทริป',uri:window.location.href}
+        }]}
+      }
+    }]);
+    toast('✅ แชร์ใน LINE เรียบร้อยแล้ว','success');
+  } catch(e){ toast('❌ แชร์ไม่สำเร็จ','error'); }
+}
+
+// ═══════════════════════════════════════════════
+//  MODAL / SIDEBAR HELPERS
+// ═══════════════════════════════════════════════
+const openModal  = id => document.getElementById(id).classList.add('open');
+const closeModal = id => document.getElementById(id).classList.remove('open');
+const openSidebar  = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('mob-overlay').classList.add('open'); };
+const closeSidebar = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('mob-overlay').classList.remove('open'); };
+
+// ═══════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════
+let toastT;
+function toast(msg,type='info'){
+  const el=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  el.className=`toast ${type} show`;
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>el.classList.remove('show'),3200);
+}
+
+// ═══════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+// Keyboard
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){ closeModal('modal-trip'); closeModal('modal-place'); }
+});
+
+// ═══════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════
+(async()=>{ load(); await initLiff(); render(); })();
+</script>
+</body>
+</html>
