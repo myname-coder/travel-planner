@@ -9,9 +9,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <!-- LINE LIFF SDK -->
 <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <style>
 /* ══════════ RESET & ROOT ══════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 :root {
   --bg:         #070b16;
   --sidebar:    rgba(8,12,26,0.97);
@@ -29,9 +33,12 @@
   --attr-c:     #4ade80;  --attr-bg:   rgba(74,222,128,0.12);   --attr-bd:   rgba(74,222,128,0.35);
   --shop-c:     #f472b6;  --shop-bg:   rgba(244,114,182,0.12);  --shop-bd:   rgba(244,114,182,0.35);
 }
+
 html, body { height: 100%; font-family: 'Kanit', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+
 /* ══════════ LAYOUT ══════════ */
 .app { display: flex; height: 100vh; }
+
 /* ══════════ SIDEBAR ══════════ */
 .sidebar {
   width: 260px; min-width: 260px; height: 100vh;
@@ -40,6 +47,7 @@ html, body { height: 100%; font-family: 'Kanit', sans-serif; background: var(--b
   transition: left 0.3s;
 }
 .sidebar-top { padding: 18px 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+
 .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .brand-icon {
   width: 38px; height: 38px;
@@ -49,6 +57,7 @@ html, body { height: 100%; font-family: 'Kanit', sans-serif; background: var(--b
 }
 .brand h1 { font-size: 1rem; font-weight: 700; background: linear-gradient(135deg,#e2e8f4,#94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.2; }
 .brand p  { font-size: 0.62rem; color: var(--muted); }
+
 .btn-new-trip {
   width: 100%; padding: 9px; background: linear-gradient(135deg,#3b82f6,#2563eb);
   border: none; border-radius: 10px; color: #fff; font-family: 'Kanit', sans-serif;
@@ -56,9 +65,11 @@ html, body { height: 100%; font-family: 'Kanit', sans-serif; background: var(--b
   display: flex; align-items: center; justify-content: center; gap: 6px;
 }
 .btn-new-trip:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(59,130,246,0.35); }
+
 .trip-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 3px; }
 .trip-list::-webkit-scrollbar { width: 3px; }
 .trip-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
 .trip-item { padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: all 0.18s; border: 1px solid transparent; display: flex; align-items: center; gap: 9px; position: relative; }
 .trip-item:hover  { background: var(--card-hover); }
 .trip-item.active { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.3); }
@@ -70,8 +81,10 @@ html, body { height: 100%; font-family: 'Kanit', sans-serif; background: var(--b
 .trip-del   { display: none; background: none; border: none; color: rgba(255,255,255,0.2); cursor: pointer; font-size: 0.82rem; padding: 2px; transition: color 0.15s; }
 .trip-item:hover .trip-del { display: block; }
 .trip-del:hover { color: #f87171; }
+
 /* ══════════ MAIN ══════════ */
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
 /* Trip Header */
 .trip-header    { padding: 16px 22px 0; flex-shrink: 0; border-bottom: 1px solid var(--border); }
 .trip-header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
@@ -80,8 +93,10 @@ html, body { height: 100%; font-family: 'Kanit', sans-serif; background: var(--b
 .trip-header-info h2 { font-size: 1.25rem; font-weight: 700; }
 .trip-header-info p  { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
 .trip-header-actions { display: flex; gap: 7px; flex-shrink: 0; }
+
 .btn-icon { background: var(--card); border: 1px solid var(--border); border-radius: 9px; padding: 7px 12px; color: var(--muted); font-family: 'Kanit', sans-serif; font-size: 0.73rem; cursor: pointer; transition: all 0.18s; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
 .btn-icon:hover { background: var(--card-hover); color: var(--text); border-color: var(--border-hi); }
+
 /* Category Tabs */
 .cat-tabs { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 0; }
 .cat-tabs::-webkit-scrollbar { display: none; }
@@ -89,22 +104,27 @@ html, body { height: 100%; font-family: 'Kanit', sans-serif; background: var(--b
 .cat-tab:hover  { background: var(--card); color: var(--text); }
 .cat-tab.active { background: var(--card-hover); border-color: var(--border-hi); color: var(--text); }
 .ct-badge { font-size: 0.58rem; background: rgba(255,255,255,0.1); border-radius: 8px; padding: 1px 5px; }
+
 /* Places Grid */
 .places-area { flex: 1; overflow-y: auto; padding: 20px 22px; }
 .places-area::-webkit-scrollbar { width: 4px; }
 .places-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 .places-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px,1fr)); gap: 15px; }
+
 /* Place Card */
 .place-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; cursor: pointer; transition: all 0.22s; animation: fadeUp 0.3s ease both; display: flex; flex-direction: column; }
 @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 .place-card:hover { border-color: var(--border-hi); transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.35); }
+
 .card-photo { width: 100%; height: 155px; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
 .card-photo img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
 .place-card:hover .card-photo img { transform: scale(1.05); }
+
 .cat-badge { position: absolute; top: 10px; left: 10px; border-radius: 8px; padding: 3px 9px; font-size: 0.64rem; font-weight: 600; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); }
 .card-del-btn { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.65); backdrop-filter: blur(6px); border: none; border-radius: 7px; padding: 4px 8px; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.73rem; transition: all 0.15s; opacity: 0; }
 .place-card:hover .card-del-btn { opacity: 1; }
 .card-del-btn:hover { background: rgba(239,68,68,0.75); color: #fff; }
+
 .card-body  { padding: 12px 13px; flex: 1; display: flex; flex-direction: column; gap: 3px; }
 .card-name  { font-size: 0.88rem; font-weight: 600; line-height: 1.35; }
 .card-meta  { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
@@ -112,11 +132,13 @@ html, body { height: 100%; font-family: 'Kanit', sans-serif; background: var(--b
 .card-notes { font-size: 0.72rem; color: var(--muted); margin-top: 5px; padding-top: 5px; border-top: 1px solid var(--border); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .card-maps-btn { margin-top: 8px; display: inline-flex; align-items: center; gap: 5px; font-size: 0.71rem; color: var(--accent); text-decoration: none; font-weight: 500; background: rgba(59,130,246,0.1); border-radius: 7px; padding: 5px 10px; transition: background 0.15s; border: 1px solid rgba(59,130,246,0.2); }
 .card-maps-btn:hover { background: rgba(59,130,246,0.2); }
+
 /* Add Card */
 .add-place-card { background: none; border: 2px dashed var(--border); border-radius: 16px; min-height: 230px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; cursor: pointer; transition: all 0.2s; color: var(--muted); }
 .add-place-card:hover { border-color: rgba(59,130,246,0.5); color: var(--accent); background: rgba(59,130,246,0.04); }
 .add-place-card .add-icon { font-size: 2rem; }
 .add-place-card p { font-size: 0.82rem; font-weight: 500; }
+
 /* ══════════ EMPTY STATE ══════════ */
 .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: var(--muted); padding: 40px; text-align: center; }
 .empty-state .es-icon { font-size: 4rem; }
@@ -124,6 +146,7 @@ html, body { height: 100%; font-family: 'Kanit', sans-serif; background: var(--b
 .empty-state p  { font-size: 0.85rem; max-width: 300px; line-height: 1.6; }
 .es-btn { padding: 11px 24px; background: linear-gradient(135deg,#3b82f6,#2563eb); border: none; border-radius: 11px; color: #fff; font-family: 'Kanit', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 4px; }
 .es-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(59,130,246,0.35); }
+
 /* ══════════ MODAL ══════════ */
 .modal-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.72); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
 .modal-overlay.open { opacity: 1; pointer-events: all; }
@@ -132,6 +155,7 @@ html, body { height: 100%; font-family: 'Kanit', sans-serif; background: var(--b
 .modal-box::-webkit-scrollbar { width: 3px; }
 .modal-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 .modal-title { font-size: 1.12rem; font-weight: 700; margin-bottom: 18px; }
+
 .fg { margin-bottom: 13px; }
 .fg label { display: block; font-size: 0.71rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
 .fg input, .fg textarea {
@@ -144,6 +168,7 @@ html, body { height: 100%; font-family: 'Kanit', sans-serif; background: var(--b
 .fg textarea { resize: none; height: 72px; }
 .fg-row { display: flex; gap: 10px; }
 .fg-row .fg { flex: 1; margin-bottom: 0; }
+
 /* Category Selector */
 .cat-selector { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; }
 .cat-opt { padding: 8px 4px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--muted); font-family: 'Kanit', sans-serif; font-size: 0.64rem; cursor: pointer; text-align: center; transition: all 0.18s; }
@@ -154,32 +179,38 @@ html, body { height: 100%; font-family: 'Kanit', sans-serif; background: var(--b
 .cat-opt.sel.cafe       { background: var(--cafe-bg);  border-color: var(--cafe-bd);  color: var(--cafe-c);  font-weight: 600; }
 .cat-opt.sel.attraction { background: var(--attr-bg);  border-color: var(--attr-bd);  color: var(--attr-c);  font-weight: 600; }
 .cat-opt.sel.shopping   { background: var(--shop-bg);  border-color: var(--shop-bd);  color: var(--shop-c);  font-weight: 600; }
+
 /* Emoji Grid */
 .emoji-grid { display: flex; flex-wrap: wrap; gap: 6px; }
 .emoji-opt { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); font-size: 1.35rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
 .emoji-opt:hover  { border-color: var(--border-hi); background: var(--card-hover); }
 .emoji-opt.sel    { border-color: rgba(59,130,246,0.6); background: rgba(59,130,246,0.12); }
+
 /* Photo Section */
 .photo-preview { width: 100%; height: 135px; border-radius: 12px; overflow: hidden; background: linear-gradient(135deg,#1e293b,#0f172a); display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 8px; }
 .photo-preview img { width: 100%; height: 100%; object-fit: cover; }
 .btn-fetch { width: 100%; padding: 8px; border-radius: 9px; border: 1px dashed var(--border); background: none; color: var(--muted); font-family: 'Kanit', sans-serif; font-size: 0.77rem; cursor: pointer; transition: all 0.18s; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 7px; }
 .btn-fetch:hover { border-color: rgba(96,165,250,0.4); color: var(--hotel-c); background: rgba(96,165,250,0.05); }
 .btn-fetch.loading { opacity: 0.6; pointer-events: none; }
+
 .modal-actions { display: flex; gap: 8px; margin-top: 18px; }
 .btn-primary { flex: 1; padding: 11px; border-radius: 11px; border: none; background: linear-gradient(135deg,#3b82f6,#2563eb); color: #fff; font-family: 'Kanit', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
 .btn-primary:hover { filter: brightness(1.1); }
 .btn-cancel  { padding: 11px 18px; border-radius: 11px; border: 1px solid var(--border); background: none; color: var(--muted); font-family: 'Kanit', sans-serif; font-size: 0.9rem; cursor: pointer; transition: all 0.18s; }
 .btn-cancel:hover { background: var(--card-hover); color: var(--text); }
+
 /* LINE Button */
 .btn-line { background: #06C755; border: none; border-radius: 9px; padding: 7px 14px; color: #fff; font-family: 'Kanit', sans-serif; font-size: 0.73rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: filter 0.18s; }
 .btn-line:hover { filter: brightness(1.1); }
 .btn-line.hide { display: none; }
+
 /* ══════════ TOAST ══════════ */
 .toast { position: fixed; top: 18px; left: 50%; transform: translateX(-50%) translateY(-80px); background: rgba(8,12,26,0.94); backdrop-filter: blur(14px); border: 1px solid var(--border-hi); border-radius: 12px; padding: 11px 20px; color: var(--text); font-size: 0.82rem; font-weight: 500; z-index: 9999; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1); display: flex; align-items: center; gap: 8px; white-space: nowrap; box-shadow: 0 10px 36px rgba(0,0,0,0.45); }
 .toast.show    { transform: translateX(-50%) translateY(0); }
 .toast.success { border-color: rgba(74,222,128,0.4); }
 .toast.error   { border-color: rgba(248,113,113,0.4); }
 .toast.info    { border-color: rgba(96,165,250,0.4); }
+
 /* ══════════ RESPONSIVE (Mobile / LINE) ══════════ */
 @media (max-width: 680px) {
   .sidebar { position: fixed; left: -270px; z-index: 200; height: 100vh; }
@@ -196,22 +227,30 @@ html, body { height: 100%; font-family: 'Kanit', sans-serif; background: var(--b
 </style>
 </head>
 <body>
+
 <div class="mob-overlay" id="mob-overlay" onclick="closeSidebar()"></div>
+
 <div class="app">
   <!-- ══ SIDEBAR ══ -->
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-top">
       <div class="brand">
         <div class="brand-icon">✈️</div>
-        <div><h1>Travel Planner</h1><p>Pro Edition</p></div>
+        <div>
+          <h1>Travel Planner</h1>
+          <p>Pro Edition</p>
+          <div id="db-status" style="font-size:0.58rem; margin-top:2.5px; display:inline-flex; align-items:center; gap:3px; padding:1px 5.5px; border-radius:4.5px; font-weight:500; cursor:pointer;" onclick="openFirebaseModal()"></div>
+        </div>
       </div>
       <button class="btn-new-trip" onclick="openTripModal()">+ สร้างทริปใหม่</button>
     </div>
     <div class="trip-list" id="trip-list"></div>
   </nav>
+
   <!-- ══ MAIN ══ -->
   <main class="main" id="main"></main>
 </div>
+
 <!-- Modal: New Trip -->
 <div class="modal-overlay" id="modal-trip" onclick="if(event.target.id==='modal-trip')closeModal('modal-trip')">
   <div class="modal-box">
@@ -228,20 +267,26 @@ html, body { height: 100%; font-family: 'Kanit', sans-serif; background: var(--b
     </div>
   </div>
 </div>
+
 <!-- Modal: Add/Edit Place -->
 <div class="modal-overlay" id="modal-place" onclick="if(event.target.id==='modal-place')closeModal('modal-place')">
   <div class="modal-box">
     <div class="modal-title" id="modal-place-title">📍 เพิ่มสถานที่</div>
+
     <div class="fg">
       <label>หมวดหมู่</label>
       <div class="cat-selector" id="cat-selector"></div>
     </div>
+
     <div class="fg"><label>ชื่อสถานที่ *</label><input id="p-name" placeholder="เช่น วัดพระแก้ว, Nimman Hive Hotel, ร้านข้าวซอยลามดวน" /></div>
+
     <div class="fg-row">
       <div class="fg"><label>จังหวัด</label><input id="p-province" placeholder="เช่น เชียงใหม่" /></div>
       <div class="fg"><label>วันที่</label><input id="p-date" placeholder="เช่น 10 ก.ค." /></div>
     </div>
+
     <div class="fg"><label>โน้ต</label><textarea id="p-notes" placeholder="ค่าเข้า, เวลาเปิด-ปิด, เมนูแนะนำ, ข้อมูลเพิ่มเติม..."></textarea></div>
+
     <div class="fg">
       <label>รูปภาพ</label>
       <div class="photo-preview" id="photo-preview"><span id="photo-icon">🏞️</span></div>
@@ -250,19 +295,62 @@ html, body { height: 100%; font-family: 'Kanit', sans-serif; background: var(--b
       </button>
       <input id="p-img" placeholder="หรือวาง URL รูปภาพ / Google Drive link เองได้" oninput="onImgInput()" />
     </div>
+
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal('modal-place')">ยกเลิก</button>
       <button class="btn-primary" onclick="savePlace()">📍 บันทึกสถานที่</button>
     </div>
   </div>
 </div>
+
 <div class="toast" id="toast"><span id="toast-msg"></span></div>
-<script>
+
+<!-- Modal: Firebase Config Help -->
+<div class="modal-overlay" id="modal-firebase" onclick="if(event.target.id==='modal-firebase')closeModal('modal-firebase')">
+  <div class="modal-box" style="max-width: 520px;">
+    <div class="modal-title">🔥 เชื่อมต่อ Firebase เพื่อแชร์เรียลไทม์</div>
+    <div style="font-size:0.8rem; line-height:1.6; color:var(--muted); margin-bottom:15px;">
+      คุณสามารถแชร์ทริปให้เพื่อนช่วยกันแต่งทริปได้แบบ Real-time! เพียงเปิดใช้งาน Cloud Firestore (ฟรี) แล้วนำ Config มาใส่ในโค้ด:
+    </div>
+    <ol style="font-size:0.78rem; line-height:1.7; color:var(--text); padding-left:18px; margin-bottom:15px; display:flex; flex-direction:column; gap:5px;">
+      <li>สมัคร/ล็อกอินที่ <a href="https://console.firebase.google.com/" target="_blank" style="color:var(--accent)">Firebase Console</a></li>
+      <li>สร้างโครงการใหม่ (Create a project)</li>
+      <li>สร้างฐานข้อมูล <b>Cloud Firestore</b> (เลือก Start in test mode)</li>
+      <li>สร้างแอพพลิเคชันประเภท <b>Web (&lt;/&gt;)</b> ในโครงการ</li>
+      <li>คัดลอก <b>firebaseConfig</b> ที่ได้ ไปแก้ไขในไฟล์ <code>index.html</code></li>
+    </ol>
+    <div class="fg">
+      <label>ตัวอย่างตำแหน่งแก้ไขในไฟล์ index.html</label>
+      <pre style="background:rgba(255,255,255,0.03); padding:10px; border-radius:8px; font-size:0.7rem; overflow-x:auto; color:#a78bfa; border:1px solid var(--border)">
+const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "...",
+  projectId: "...",
+  ...
+};</pre>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" style="width:100%" onclick="closeModal('modal-firebase')">รับทราบ</button>
+    </div>
+  </div>
+</div>
+
 // ═══════════════════════════════════════════════
 //  CONFIG
 // ═══════════════════════════════════════════════
 const SK      = 'tp_pro_v2';
 const LIFF_ID = '2010557291-eauwhXav'; // ✅ LINE MINI App LIFF ID
+
+// 🔧 วาง Firebase Config ที่คัดลอกมาตรงนี้ เพื่อเริ่มใช้งานเรียลไทม์แชร์
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
 const CATS = {
   hotel:      {l:'ที่พัก',    i:'🏨',c:'#60a5fa',bg:'rgba(96,165,250,0.12)',  bd:'rgba(96,165,250,0.35)'},
   restaurant: {l:'ร้านอาหาร',i:'🍽️',c:'#fb923c',bg:'rgba(251,146,60,0.12)',   bd:'rgba(251,146,60,0.35)'},
@@ -270,7 +358,9 @@ const CATS = {
   attraction: {l:'ที่เที่ยว',i:'🏞️',c:'#4ade80',bg:'rgba(74,222,128,0.12)',   bd:'rgba(74,222,128,0.35)'},
   shopping:   {l:'ช้อปปิ้ง', i:'🛍️',c:'#f472b6',bg:'rgba(244,114,182,0.12)', bd:'rgba(244,114,182,0.35)'}
 };
+
 const EMOJIS = ['🏔️','🌊','🗼','🌸','🏝️','🎎','🌅','🏜️','🌃','🎡','🗺️','✈️','🌴','⛩️','🏖️','🚂','🎆','🌿'];
+
 // ═══════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════
@@ -278,21 +368,108 @@ let DB  = {trips:[]};
 let act = {tripId:null, cat:'all'};
 let ui  = {emoji:'🗺️', cat:'attraction', photo:'', editId:null};
 let isLiff = false;
+
+let dbFS = null;
+let syncActiveTripListener = null;
+let ownerId = localStorage.getItem('tp_owner_id') || uid();
+localStorage.setItem('tp_owner_id', ownerId);
+
 // ═══════════════════════════════════════════════
 //  STORAGE
 // ═══════════════════════════════════════════════
 const load = () => { try { const r=localStorage.getItem(SK); if(r) DB=JSON.parse(r); } catch(e){} };
 const save = () => localStorage.setItem(SK, JSON.stringify(DB));
+
+// ═══════════════════════════════════════════════
+//  FIREBASE CONFIG & STORAGE
+// ═══════════════════════════════════════════════
+function initFirebase() {
+  const el = document.getElementById('db-status');
+  if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+    try {
+      firebase.initializeApp(firebaseConfig);
+      dbFS = firebase.firestore();
+      el.style.background = 'rgba(16,185,129,0.12)';
+      el.style.color = '#10b981';
+      el.textContent = '🌐 แชร์เรียลไทม์';
+      return true;
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  el.style.background = 'rgba(255,255,255,0.06)';
+  el.style.color = 'var(--muted)';
+  el.textContent = '📱 โหมดเครื่องเดียว';
+  return false;
+}
+
+async function saveTripToFS(trip) {
+  if (!dbFS) return;
+  try {
+    await dbFS.collection('trips').doc(trip.id).set({
+      id: trip.id,
+      name: trip.name,
+      dates: trip.dates || '',
+      emoji: trip.emoji || '🗺️',
+      places: trip.places || [],
+      ownerId: ownerId,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch(e) { console.error(e); }
+}
+
+async function deleteTripFromFS(tripId) {
+  if (!dbFS) return;
+  try {
+    await dbFS.collection('trips').doc(tripId).delete();
+  } catch(e) { console.error(e); }
+}
+
+function subscribeToTrip(tripId) {
+  if (syncActiveTripListener) syncActiveTripListener();
+  if (!dbFS) return;
+
+  syncActiveTripListener = dbFS.collection('trips').doc(tripId).onSnapshot(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+      const idx = DB.trips.findIndex(t => t.id === tripId);
+      if (idx !== -1) {
+        DB.trips[idx] = data;
+      } else {
+        DB.trips.push(data);
+      }
+      save();
+      render();
+    }
+  });
+}
+
+function openFirebaseModal() {
+  openModal('modal-firebase');
+}
+
 // ═══════════════════════════════════════════════
 //  LIFF
 // ═══════════════════════════════════════════════
 async function initLiff() {
-  try { await liff.init({liffId:LIFF_ID}); isLiff=liff.isInClient(); } catch(e){}
+  try {
+    await liff.init({liffId:LIFF_ID});
+    isLiff = liff.isInClient();
+    if (liff.isLoggedIn()) {
+      const profile = await liff.getProfile();
+      if (profile && profile.userId) {
+        ownerId = profile.userId;
+        localStorage.setItem('tp_owner_id', ownerId);
+      }
+    }
+  } catch(e){}
 }
+
 // ═══════════════════════════════════════════════
 //  RENDER
 // ═══════════════════════════════════════════════
 function render() { renderSidebar(); renderMain(); }
+
 function renderSidebar() {
   const el = document.getElementById('trip-list');
   if (!DB.trips.length) {
@@ -310,6 +487,7 @@ function renderSidebar() {
       <button class="trip-del" onclick="event.stopPropagation();delTrip('${t.id}')" title="ลบ">✕</button>
     </div>`).join('');
 }
+
 function renderMain() {
   const el = document.getElementById('main');
   if (!act.tripId) {
@@ -321,11 +499,14 @@ function renderMain() {
     </div>`;
     return;
   }
+
   const trip = DB.trips.find(t=>t.id===act.tripId);
   if (!trip) return;
+
   const counts = {all:trip.places.length};
   Object.keys(CATS).forEach(k=>counts[k]=trip.places.filter(p=>p.cat===k).length);
   const places = act.cat==='all' ? trip.places : trip.places.filter(p=>p.cat===act.cat);
+
   el.innerHTML = `
     <div class="trip-header">
       <div class="trip-header-top">
@@ -336,6 +517,7 @@ function renderMain() {
           ${trip.dates?`<p>📅 ${esc(trip.dates)}</p>`:''}
         </div>
         <div class="trip-header-actions">
+          ${dbFS ? `<button class="btn-icon" onclick="copyShareLink('${trip.id}')">🔗 คัดลอกลิงก์แชร์</button>` : ''}
           <button class="btn-line ${isLiff?'':'hide'}" onclick="shareToLine()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
             แชร์ LINE
@@ -357,6 +539,7 @@ function renderMain() {
       </div>
     </div>`;
 }
+
 function cardHTML(p, i) {
   const c = CATS[p.cat]||CATS.attraction;
   const photo = p.img
@@ -364,6 +547,7 @@ function cardHTML(p, i) {
     : `<span style="font-size:3.5rem">${c.i}</span>`;
   const photoBg = p.img ? '' : `background:linear-gradient(135deg,${c.c}22,${c.c}08)`;
   const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name+(p.province?' '+p.province:''))}`;
+
   return `<div class="place-card" style="animation-delay:${i*0.04}s">
     <div class="card-photo" style="${photoBg}">
       ${photo}
@@ -381,6 +565,7 @@ function cardHTML(p, i) {
     </div>
   </div>`;
 }
+
 // ═══════════════════════════════════════════════
 //  TRIP CRUD
 // ═══════════════════════════════════════════════
@@ -394,11 +579,13 @@ function openTripModal() {
   openModal('modal-trip');
   setTimeout(()=>document.getElementById('t-name').focus(),280);
 }
+
 function pickEmoji(e, el) {
   ui.emoji = e;
   document.querySelectorAll('.emoji-opt').forEach(x=>x.classList.remove('sel'));
   el.classList.add('sel');
 }
+
 function saveTrip() {
   const name  = document.getElementById('t-name').value.trim();
   const dates = document.getElementById('t-dates').value.trim();
@@ -406,17 +593,31 @@ function saveTrip() {
   const t = {id:uid(), name, dates, emoji:ui.emoji, places:[]};
   DB.trips.push(t);
   act.tripId = t.id; act.cat = 'all';
-  save(); closeModal('modal-trip'); render();
+  save();
+  if (dbFS) {
+    saveTripToFS(t);
+    subscribeToTrip(t.id);
+  }
+  closeModal('modal-trip'); render();
   toast(`✅ สร้างทริป "${name}" แล้ว!`,'success');
 }
-function selTrip(id) { act.tripId=id; act.cat='all'; render(); closeSidebar(); }
+
+function selTrip(id) {
+  act.tripId=id; act.cat='all';
+  if (dbFS) subscribeToTrip(id);
+  render(); closeSidebar();
+}
+
 function delTrip(id) {
   const t = DB.trips.find(x=>x.id===id);
   if (!t || !confirm(`ลบทริป "${t.name}" ออกทั้งหมดไหมครับ?`)) return;
   DB.trips = DB.trips.filter(x=>x.id!==id);
   if (act.tripId===id) act.tripId = DB.trips[0]?.id||null;
-  save(); render(); toast('🗑️ ลบทริปเรียบร้อยแล้ว','info');
+  save();
+  if (dbFS) deleteTripFromFS(id);
+  render(); toast('🗑️ ลบทริปเรียบร้อยแล้ว','info');
 }
+
 // ═══════════════════════════════════════════════
 //  PLACE CRUD
 // ═══════════════════════════════════════════════
@@ -444,6 +645,7 @@ function openPlaceModal(editId=null) {
   openModal('modal-place');
   setTimeout(()=>document.getElementById('p-name').focus(),280);
 }
+
 function buildCatSelector() {
   document.getElementById('cat-selector').innerHTML = Object.entries(CATS).map(([k,v])=>
     `<div class="cat-opt ${k===ui.cat?'sel '+k:''}" onclick="pickCat('${k}',this)">
@@ -451,12 +653,14 @@ function buildCatSelector() {
     </div>`
   ).join('');
 }
+
 function pickCat(k, el) {
   ui.cat = k;
   document.querySelectorAll('.cat-opt').forEach(x=>x.className='cat-opt');
   el.classList.add('sel', k);
   if (!ui.photo) setPhotoPreview('', k);
 }
+
 function setPhotoPreview(url, cat) {
   const c   = CATS[cat]||CATS.attraction;
   const pre = document.getElementById('photo-preview');
@@ -467,11 +671,13 @@ function setPhotoPreview(url, cat) {
     pre.style.background = `linear-gradient(135deg,${c.c}22,${c.c}08)`;
   }
 }
+
 function onImgInput() {
   const v = document.getElementById('p-img').value.trim();
   ui.photo = v ? fixImgUrl(v) : '';
   setPhotoPreview(ui.photo, ui.cat);
 }
+
 async function savePlace() {
   const name     = document.getElementById('p-name').value.trim();
   const province = document.getElementById('p-province').value.trim();
@@ -479,9 +685,11 @@ async function savePlace() {
   const notes    = document.getElementById('p-notes').value.trim();
   const imgRaw   = document.getElementById('p-img').value.trim();
   if (!name) { toast('⚠️ กรุณากรอกชื่อสถานที่ก่อนครับ','error'); return; }
+
   const img  = imgRaw ? fixImgUrl(imgRaw) : ui.photo;
   const trip = DB.trips.find(t=>t.id===act.tripId);
   if (!trip) return;
+
   if (ui.editId) {
     const p = trip.places.find(x=>x.id===ui.editId);
     if (p) Object.assign(p,{cat:ui.cat,name,province,date,notes,img});
@@ -490,19 +698,27 @@ async function savePlace() {
     trip.places.push(p);
     geocodeBg(p.id, name, province, trip.id);
   }
-  save(); closeModal('modal-place'); render();
+
+  save();
+  if (dbFS) saveTripToFS(trip);
+  closeModal('modal-place'); render();
   toast(`✅ ${ui.editId?'แก้ไข':'เพิ่ม'} "${name}" เรียบร้อยแล้ว`,'success');
   ui.editId = null;
 }
+
 function delPlace(pid) {
   const trip = DB.trips.find(t=>t.id===act.tripId);
   if (!trip) return;
   const p = trip.places.find(x=>x.id===pid);
   if (!p || !confirm(`ลบ "${p.name}" ออกไหมครับ?`)) return;
   trip.places = trip.places.filter(x=>x.id!==pid);
-  save(); render(); toast('🗑️ ลบสถานที่แล้ว','info');
+  save();
+  if (dbFS) saveTripToFS(trip);
+  render(); toast('🗑️ ลบสถานที่แล้ว','info');
 }
+
 function setCat(c) { act.cat=c; renderMain(); }
+
 // ═══════════════════════════════════════════════
 //  PHOTO — Wikipedia API (ฟรี ไม่ต้อง Key)
 // ═══════════════════════════════════════════════
@@ -510,13 +726,16 @@ async function doFetchPhoto() {
   const name     = document.getElementById('p-name').value.trim();
   const province = document.getElementById('p-province').value.trim();
   if (!name) { toast('⚠️ กรอกชื่อสถานที่ก่อนครับ','error'); return; }
+
   const btn = document.getElementById('btn-fetch');
   const fic = document.getElementById('fetch-icon');
   const ftx = document.getElementById('fetch-txt');
   btn.classList.add('loading');
   fic.textContent='⏳'; ftx.textContent='กำลังค้นหารูปภาพ...';
   toast('🔍 กำลังค้นหารูปจาก Wikipedia...','info');
+
   const url = await wikiPhoto(name, province);
+
   if (url) {
     ui.photo = url;
     document.getElementById('p-img').value = url;
@@ -525,9 +744,11 @@ async function doFetchPhoto() {
   } else {
     toast('📷 ไม่พบรูปใน Wikipedia — ลองวาง URL รูปเองด้านล่างครับ','error');
   }
+
   btn.classList.remove('loading');
   fic.textContent='🔍'; ftx.textContent='ดึงรูปอัตโนมัติจาก Wikipedia';
 }
+
 async function wikiPhoto(name, province) {
   const queries = [
     province?`${name} ${province}`:name,
@@ -547,6 +768,7 @@ async function wikiPhoto(name, province) {
   }
   return null;
 }
+
 // ═══════════════════════════════════════════════
 //  GEOCODE (Nominatim — Background)
 // ═══════════════════════════════════════════════
@@ -558,10 +780,16 @@ async function geocodeBg(pid, name, province, tripId) {
     if (arr.length) {
       const trip = DB.trips.find(t=>t.id===tripId);
       const p    = trip?.places.find(x=>x.id===pid);
-      if (p) { p.lat=parseFloat(arr[0].lat); p.lng=parseFloat(arr[0].lon); save(); }
+      if (p) {
+        p.lat=parseFloat(arr[0].lat);
+        p.lng=parseFloat(arr[0].lon);
+        save();
+        if (dbFS) saveTripToFS(trip);
+      }
     }
   } catch(e){}
 }
+
 // ═══════════════════════════════════════════════
 //  IMAGE URL FIX (Google Drive → Direct)
 // ═══════════════════════════════════════════════
@@ -569,6 +797,7 @@ function fixImgUrl(url) {
   const m = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
   return m ? `https://drive.google.com/uc?export=view&id=${m[1]}` : url;
 }
+
 // ═══════════════════════════════════════════════
 //  CSV EXPORT
 // ═══════════════════════════════════════════════
@@ -587,14 +816,28 @@ function exportCSV(tid) {
   a.click(); URL.revokeObjectURL(a.href);
   toast(`✅ Export CSV ${trip.places.length} สถานที่เรียบร้อย`,'success');
 }
+
 // ═══════════════════════════════════════════════
-//  LINE SHARE
+//  LINE SHARE & COPY LINK
 // ═══════════════════════════════════════════════
+function copyShareLink(tripId) {
+  let shareUrl = window.location.origin + window.location.pathname + '?trip=' + tripId;
+  if (isLiff) {
+    shareUrl = `https://liff.line.me/${LIFF_ID}?trip=${tripId}`;
+  }
+  navigator.clipboard.writeText(shareUrl).then(() => {
+    toast('📋 คัดลอกลิงก์แชร์เรียบร้อยแล้ว ส่งให้เพื่อนกดเข้าทริปได้เลย!', 'success');
+  }).catch(() => {
+    toast('❌ คัดลอกลิงก์ไม่สำเร็จ', 'error');
+  });
+}
+
 async function shareToLine() {
   if (!isLiff||!liff.isInClient()) { toast('กรุณาเปิดในแอป LINE ครับ','error'); return; }
   const trip = DB.trips.find(t=>t.id===act.tripId);
   if (!trip) return;
   try {
+    let link = `https://liff.line.me/${LIFF_ID}?trip=${trip.id}`;
     await liff.shareTargetPicker([{
       type:'flex', altText:`✈️ แผนทริป: ${trip.name}`,
       contents:{
@@ -607,13 +850,14 @@ async function shareToLine() {
         ]},
         footer:{ type:'box', layout:'vertical', contents:[{
           type:'button', style:'primary', color:'#3b82f6',
-          action:{type:'uri',label:'เปิดแผนทริป',uri:window.location.href}
+          action:{type:'uri',label:'เปิดแผนทริป',uri:link}
         }]}
       }
     }]);
     toast('✅ แชร์ใน LINE เรียบร้อยแล้ว','success');
   } catch(e){ toast('❌ แชร์ไม่สำเร็จ','error'); }
 }
+
 // ═══════════════════════════════════════════════
 //  MODAL / SIDEBAR HELPERS
 // ═══════════════════════════════════════════════
@@ -621,6 +865,7 @@ const openModal  = id => document.getElementById(id).classList.add('open');
 const closeModal = id => document.getElementById(id).classList.remove('open');
 const openSidebar  = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('mob-overlay').classList.add('open'); };
 const closeSidebar = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('mob-overlay').classList.remove('open'); };
+
 // ═══════════════════════════════════════════════
 //  TOAST
 // ═══════════════════════════════════════════════
@@ -632,19 +877,83 @@ function toast(msg,type='info'){
   clearTimeout(toastT);
   toastT=setTimeout(()=>el.classList.remove('show'),3200);
 }
+
 // ═══════════════════════════════════════════════
 //  UTILS
 // ═══════════════════════════════════════════════
 const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2);
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
 // Keyboard
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){ closeModal('modal-trip'); closeModal('modal-place'); }
 });
+
+// ═══════════════════════════════════════════════
+//  FIREBASE ASYNC LOADER
+// ═══════════════════════════════════════════════
+async function loadTrips() {
+  load(); // 1. โหลด offline cache ก่อน
+  
+  if (!dbFS) {
+    if (DB.trips.length && !act.tripId) {
+      act.tripId = DB.trips[0].id;
+    }
+    return;
+  }
+
+  try {
+    // 2. ดึงทริปที่เป็นเจ้าของ
+    const snapshot = await dbFS.collection('trips').where('ownerId', '==', ownerId).get();
+    const fetched = [];
+    snapshot.forEach(doc => fetched.push(doc.data()));
+
+    // 3. ตรวจสอบทริปที่แชร์ผ่านลิงก์ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlTripId = urlParams.get('trip');
+    
+    const sharedIds = JSON.parse(localStorage.getItem('tp_shared_trips') || '[]');
+    if (urlTripId && !sharedIds.includes(urlTripId)) {
+      sharedIds.push(urlTripId);
+      localStorage.setItem('tp_shared_trips', JSON.stringify(sharedIds));
+    }
+
+    // 4. ดึงข้อมูลทริปที่แชร์ทั้งหมด
+    for (const id of sharedIds) {
+      if (fetched.some(t => t.id === id)) continue;
+      const doc = await dbFS.collection('trips').doc(id).get();
+      if (doc.exists) {
+        fetched.push(doc.data());
+      }
+    }
+
+    DB.trips = fetched;
+    save();
+
+    // 5. เลือกทริปใช้งาน
+    if (urlTripId) {
+      act.tripId = urlTripId;
+    } else if (DB.trips.length && !act.tripId) {
+      act.tripId = DB.trips[0].id;
+    }
+
+    if (act.tripId) {
+      subscribeToTrip(act.tripId);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
 // ═══════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════
-(async()=>{ load(); await initLiff(); render(); })();
+(async()=>{
+  initFirebase();
+  await loadTrips();
+  await initLiff();
+  render();
+})();
 </script>
 </body>
 </html>
