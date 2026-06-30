@@ -378,8 +378,30 @@ localStorage.setItem('tp_owner_id', ownerId);
 // ═══════════════════════════════════════════════
 //  STORAGE
 // ═══════════════════════════════════════════════
-const load = () => { try { const r=localStorage.getItem(SK); if(r) DB=JSON.parse(r); } catch(e){} };
-const save = () => localStorage.setItem(SK, JSON.stringify(DB));
+const load = () => {
+  try {
+    const r = localStorage.getItem(SK);
+    if (r) {
+      const parsed = JSON.parse(r);
+      if (parsed && Array.isArray(parsed.trips)) {
+        DB = parsed;
+      } else if (Array.isArray(parsed)) {
+        DB = { trips: parsed };
+      } else {
+        DB = { trips: [] };
+      }
+    } else {
+      DB = { trips: [] };
+    }
+  } catch(e) {
+    DB = { trips: [] };
+  }
+};
+const save = () => {
+  try {
+    localStorage.setItem(SK, JSON.stringify(DB));
+  } catch(e) {}
+};
 
 // ═══════════════════════════════════════════════
 //  FIREBASE CONFIG & STORAGE
@@ -433,6 +455,7 @@ function subscribeToTrip(tripId) {
   syncActiveTripListener = dbFS.collection('trips').doc(tripId).onSnapshot(doc => {
     if (doc.exists) {
       const data = doc.data();
+      if (!Array.isArray(data.places)) data.places = [];
       const idx = DB.trips.findIndex(t => t.id === tripId);
       if (idx !== -1) {
         DB.trips[idx] = data;
@@ -473,20 +496,23 @@ function render() { renderSidebar(); renderMain(); }
 
 function renderSidebar() {
   const el = document.getElementById('trip-list');
-  if (!DB.trips.length) {
+  if (!DB.trips || !DB.trips.length) {
     el.innerHTML = `<p style="padding:20px 8px;text-align:center;color:var(--muted);font-size:0.78rem;line-height:1.7">ยังไม่มีทริปครับ<br>กด "+ สร้างทริปใหม่" ด้านบน</p>`;
     return;
   }
-  el.innerHTML = DB.trips.map(t => `
-    <div class="trip-item ${t.id===act.tripId?'active':''}" onclick="selTrip('${t.id}')">
-      <span class="trip-emoji">${t.emoji}</span>
-      <div class="trip-info">
-        <div class="trip-name">${esc(t.name)}</div>
-        ${t.dates?`<div class="trip-dates">${esc(t.dates)}</div>`:''}
-      </div>
-      <span class="trip-count">${t.places.length}</span>
-      <button class="trip-del" onclick="event.stopPropagation();delTrip('${t.id}')" title="ลบ">✕</button>
-    </div>`).join('');
+  el.innerHTML = DB.trips.map(t => {
+    const placesList = t.places || [];
+    return `
+      <div class="trip-item ${t.id===act.tripId?'active':''}" onclick="selTrip('${t.id}')">
+        <span class="trip-emoji">${t.emoji || '🗺️'}</span>
+        <div class="trip-info">
+          <div class="trip-name">${esc(t.name)}</div>
+          ${t.dates?`<div class="trip-dates">${esc(t.dates)}</div>`:''}
+        </div>
+        <span class="trip-count">${placesList.length}</span>
+        <button class="trip-del" onclick="event.stopPropagation();delTrip('${t.id}')" title="ลบ">✕</button>
+      </div>`;
+  }).join('');
 }
 
 function renderMain() {
@@ -633,7 +659,8 @@ function openPlaceModal(editId=null) {
   ui.editId = editId; ui.photo = '';
   if (editId) {
     const trip = DB.trips.find(t=>t.id===act.tripId);
-    const p    = trip?.places.find(x=>x.id===editId);
+    const placesList = trip?.places || [];
+    const p    = placesList.find(x=>x.id===editId);
     if (p) {
       ui.cat = p.cat; ui.photo = p.img||'';
       document.getElementById('modal-place-title').textContent = '✏️ แก้ไขสถานที่';
@@ -698,6 +725,8 @@ async function savePlace() {
   const trip = DB.trips.find(t=>t.id===act.tripId);
   if (!trip) return;
 
+  if (!trip.places) trip.places = [];
+
   if (ui.editId) {
     const p = trip.places.find(x=>x.id===ui.editId);
     if (p) Object.assign(p,{cat:ui.cat,name,province,date,notes,img});
@@ -716,7 +745,7 @@ async function savePlace() {
 
 function delPlace(pid) {
   const trip = DB.trips.find(t=>t.id===act.tripId);
-  if (!trip) return;
+  if (!trip || !trip.places) return;
   const p = trip.places.find(x=>x.id===pid);
   if (!p || !confirm(`ลบ "${p.name}" ออกไหมครับ?`)) return;
   trip.places = trip.places.filter(x=>x.id!==pid);
@@ -787,12 +816,14 @@ async function geocodeBg(pid, name, province, tripId) {
     const arr = await res.json();
     if (arr.length) {
       const trip = DB.trips.find(t=>t.id===tripId);
-      const p    = trip?.places.find(x=>x.id===pid);
-      if (p) {
-        p.lat=parseFloat(arr[0].lat);
-        p.lng=parseFloat(arr[0].lon);
-        save();
-        if (dbFS) saveTripToFS(trip);
+      if (trip && trip.places) {
+        const p = trip.places.find(x=>x.id===pid);
+        if (p) {
+          p.lat=parseFloat(arr[0].lat);
+          p.lng=parseFloat(arr[0].lon);
+          save();
+          if (dbFS) saveTripToFS(trip);
+        }
       }
     }
   } catch(e){}
