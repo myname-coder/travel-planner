@@ -543,7 +543,7 @@ function renderMain() {
 function cardHTML(p, i) {
   const c = CATS[p.cat]||CATS.attraction;
   const photo = p.img
-    ? `<img src="${esc(p.img)}" alt="${esc(p.name)}" onerror="this.parentElement.innerHTML='<span style=font-size:3rem>${c.i}</span>'"/>`
+    ? `<img src="${esc(p.img)}" alt="${esc(p.name)}" data-id="${p.id}" onerror="handleImgError(this, '${p.cat}')"/>`
     : `<span style="font-size:3.5rem">${c.i}</span>`;
   const photoBg = p.img ? '' : `background:linear-gradient(135deg,${c.c}22,${c.c}08)`;
   const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name+(p.province?' '+p.province:''))}`;
@@ -564,6 +564,13 @@ function cardHTML(p, i) {
       <a class="card-maps-btn" href="${mapsHref}" target="_blank" onclick="event.stopPropagation()">🗺️ Google Maps</a>
     </div>
   </div>`;
+}
+
+function handleImgError(imgEl, cat) {
+  const c = CATS[cat] || CATS.attraction;
+  imgEl.parentElement.innerHTML = `<span style="font-size:3.5rem">${c.i}</span>
+    <span class="cat-badge" style="background:${c.bg};color:${c.c};border-color:${c.bd}">${c.i} ${c.l}</span>
+    <button class="card-del-btn" onclick="event.stopPropagation();delPlace('${imgEl.dataset.id}')" title="ลบ">✕</button>`;
 }
 
 // ═══════════════════════════════════════════════
