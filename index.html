@@ -309,9 +309,8 @@ html, body { height: 100%; font-family: 'Plus Jakarta Sans', 'Kanit', sans-serif
 </head>
 <body>
 
-<div class="mob-overlay" id="mob-overlay" onclick="closeSidebar()"></div>
-
 <div class="app">
+  <div class="mob-overlay" id="mob-overlay" onclick="closeSidebar()"></div>
   <!-- ══ SIDEBAR ══ -->
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-top">
@@ -1068,34 +1067,19 @@ async function loadTrips() {
   }
 
   try {
-    // 2. ดึงทริปที่เป็นเจ้าของ
-    const snapshot = await dbFS.collection('trips').where('ownerId', '==', ownerId).get();
+    // 2. ดึงทริปทั้งหมดจาก Firestore เพื่อให้ทุกคนเห็นทริปของกันและกันได้
+    const snapshot = await dbFS.collection('trips').get();
     const fetched = [];
     snapshot.forEach(doc => fetched.push(doc.data()));
-
-    // 3. ตรวจสอบทริปที่แชร์ผ่านลิงก์ URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlTripId = urlParams.get('trip');
-    
-    const sharedIds = JSON.parse(localStorage.getItem('tp_shared_trips') || '[]');
-    if (urlTripId && !sharedIds.includes(urlTripId)) {
-      sharedIds.push(urlTripId);
-      localStorage.setItem('tp_shared_trips', JSON.stringify(sharedIds));
-    }
-
-    // 4. ดึงข้อมูลทริปที่แชร์ทั้งหมด
-    for (const id of sharedIds) {
-      if (fetched.some(t => t.id === id)) continue;
-      const doc = await dbFS.collection('trips').doc(id).get();
-      if (doc.exists) {
-        fetched.push(doc.data());
-      }
-    }
 
     DB.trips = fetched;
     save();
 
-    // 5. เลือกทริปใช้งาน
+    // 3. ตรวจสอบทริปที่แชร์ผ่านลิงก์ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlTripId = urlParams.get('trip');
+
+    // 4. เลือกทริปใช้งาน
     if (urlTripId) {
       act.tripId = urlTripId;
     } else if (DB.trips.length && !act.tripId) {
