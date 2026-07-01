@@ -333,6 +333,24 @@ html, body { height: 100%; font-family: 'Plus Jakarta Sans', 'Kanit', sans-serif
 
   <!-- ══ MAIN ══ -->
   <main class="main" id="main"></main>
+
+  <!-- ══ BOTTOM NAVIGATION ══ -->
+  <div class="bottom-nav">
+    <button class="nav-item" onclick="openSidebar()">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <span>ทริปทั้งหมด</span>
+    </button>
+    <button class="nav-item" onclick="openPlaceModal()">
+      <div class="fab-btn">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <span>เพิ่มสถานที่</span>
+    </button>
+    <button class="nav-item" onclick="if(act.tripId){ if(isLiff){shareToLine()}else{copyShareLink(act.tripId)} }">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+      <span>แชร์ทริป</span>
+    </button>
+  </div>
 </div>
 
 <!-- Modal: New Trip -->
@@ -1104,22 +1122,7 @@ async function loadTrips() {
   render();
 })();
 </script>
-<div class="bottom-nav">
-  <button class="nav-item" onclick="openSidebar()">
-    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    <span>ทริปทั้งหมด</span>
-  </button>
-  <button class="nav-item" onclick="openPlaceModal()">
-    <div class="fab-btn">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    </div>
-    <span>เพิ่มสถานที่</span>
-  </button>
-  <button class="nav-item" onclick="if(act.tripId){ if(isLiff){shareToLine()}else{copyShareLink(act.tripId)} }">
-    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
-    <span>แชร์ทริป</span>
-  </button>
-</div>
+
 
 </body>
 </html>
