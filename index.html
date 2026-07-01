@@ -149,7 +149,7 @@ html, body { height: 100%; font-family: 'Plus Jakarta Sans', 'Kanit', sans-serif
 .cat-tabs::-webkit-scrollbar { display: none; }
 .cat-tab { padding: 8px 14px; border-radius: 10px 10px 0 0; border: 1px solid transparent; border-bottom: none; background: none; color: var(--muted); font-family: inherit; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
 .cat-tab:hover  { background: var(--bg); color: var(--text); }
-.cat-tab.active { background: var(--bg); border-color: var(--border) var(--border) transparent; color: var(--accent); }
+.cat-tab.active { background: var(--bg); border-color: var(--border) var(--border) transparent; color: var(--accent); font-weight: 800; border-bottom: 2.5px solid var(--accent); }
 .cat-tab .icon  { width: 14px; height: 14px; }
 
 /* Places Content Area */
@@ -679,6 +679,12 @@ function renderMain() {
     <div class="places-area">
       ${mainContentHTML}
     </div>`;
+
+  // Auto-scroll the active tab into horizontal view
+  const activeTab = el.querySelector('.cat-tab.active');
+  if (activeTab) {
+    activeTab.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' });
+  }
 }
 
 function cardHTML(p, i) {
